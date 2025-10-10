@@ -127,6 +127,15 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""f733b894-82d1-4438-9a84-d2ab4a9d5564"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -217,6 +226,17 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
                     ""action"": ""Run/Dash"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""90f2e4a4-a87f-45d8-8ca5-731c97c1c792"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -229,6 +249,7 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
         m_PlayerMap_Jump = m_PlayerMap.FindAction("Jump", throwIfNotFound: true);
         m_PlayerMap_Movement = m_PlayerMap.FindAction("Movement", throwIfNotFound: true);
         m_PlayerMap_RunDash = m_PlayerMap.FindAction("Run/Dash", throwIfNotFound: true);
+        m_PlayerMap_Interact = m_PlayerMap.FindAction("Interact", throwIfNotFound: true);
     }
 
     ~@CharacterInput()
@@ -313,6 +334,7 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerMap_Jump;
     private readonly InputAction m_PlayerMap_Movement;
     private readonly InputAction m_PlayerMap_RunDash;
+    private readonly InputAction m_PlayerMap_Interact;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerMap".
     /// </summary>
@@ -340,6 +362,10 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerMap/RunDash".
         /// </summary>
         public InputAction @RunDash => m_Wrapper.m_PlayerMap_RunDash;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerMap/Interact".
+        /// </summary>
+        public InputAction @Interact => m_Wrapper.m_PlayerMap_Interact;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -378,6 +404,9 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
             @RunDash.started += instance.OnRunDash;
             @RunDash.performed += instance.OnRunDash;
             @RunDash.canceled += instance.OnRunDash;
+            @Interact.started += instance.OnInteract;
+            @Interact.performed += instance.OnInteract;
+            @Interact.canceled += instance.OnInteract;
         }
 
         /// <summary>
@@ -401,6 +430,9 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
             @RunDash.started -= instance.OnRunDash;
             @RunDash.performed -= instance.OnRunDash;
             @RunDash.canceled -= instance.OnRunDash;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
         }
 
         /// <summary>
@@ -469,5 +501,12 @@ public partial class @CharacterInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRunDash(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInteract(InputAction.CallbackContext context);
     }
 }

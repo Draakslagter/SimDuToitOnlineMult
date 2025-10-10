@@ -112,6 +112,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: f2065236-3e92-41fe-9a62-f178970635a9
     m_ActionName: 'PlayerMap/Run/Dash[/Keyboard/shift]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: f733b894-82d1-4438-9a84-d2ab4a9d5564
+    m_ActionName: 'PlayerMap/Interact[/Keyboard/f]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: PlayerMap
@@ -130,8 +134,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  spawnedItemPrefab: {fileID: 8972744316390045801, guid: e3b4313e45d0d2648acb0489a699aac4, type: 3}
   moveSpeedMultiplier: 5
   dashSpeedMultiplier: 1.5
+  maxDashToken: 1
   groundCheckTransform: {fileID: 3797148650137546050}
   groundLayer:
     serializedVersion: 2
@@ -239,7 +245,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 120
   m_CollisionDetection: 0
 --- !u!114 &856016958161609383
 MonoBehaviour:
@@ -270,7 +276,7 @@ MonoBehaviour:
   UseUnreliableDeltas: 0
   SyncPositionX: 1
   SyncPositionY: 1
-  SyncPositionZ: 1
+  SyncPositionZ: 0
   SyncRotAngleX: 0
   SyncRotAngleY: 0
   SyncRotAngleZ: 0
@@ -330,7 +336,7 @@ Transform:
   m_GameObject: {fileID: 4302690822155136114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 5, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

@@ -3,38 +3,40 @@ using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 
-public class PlayerNetworkMovement : NetworkBehaviour
+public class PlayerMovementNetwork : NetworkBehaviour
 {
     private CharacterInput _inputMap;
     
+    [SerializeField] private GameObject spawnedItemPrefab;
+        
     [Header("Player Data")]
     private NetworkVariable<float> _playerHealth = new NetworkVariable<float>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-
-    private NetworkVariable<CustomPlayerData> _playerData = new NetworkVariable<CustomPlayerData>(new CustomPlayerData
-    {
-        playerID = 5,
-        isdead = false
-    });
-
-    private struct CustomPlayerData
-    {
-      public int playerID;
-      public bool isdead;
-    }
+   
     
     [Header("Movement")]
     private Rigidbody _characterRb;
     private Vector3 _movementVector;
-    [SerializeField] private float moveSpeedMultiplier = 5f, dashSpeedMultiplier = 1.5f;
+    [SerializeField] private float moveSpeedMultiplier = 5f;
     private float _actualSpeed;
-   
+    
     [Header("Jump")]
     [SerializeField] private Transform groundCheckTransform;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckRadius = 0.5f, jumpMultiplier = 5f;
+    
+    [Header("Dash")]
+    private Vector3 _dashVector;
+    [SerializeField] private float dashSpeedMultiplier = 1.5f;
+    private int _dashToken;
+    [SerializeField] private int maxDashToken = 1;
+
+    [Header("Colour")]
+    [SerializeField] private Color playerColour;
+    private Renderer _playerRenderer;
     
     private void Awake()
     {
@@ -45,10 +47,16 @@ public class PlayerNetworkMovement : NetworkBehaviour
         _inputMap.PlayerMap.RunDash.performed += OnDash;
         _inputMap.PlayerMap.Movement.performed += OnMove;
         _inputMap.PlayerMap.Movement.canceled += ResetMovement;
+        _inputMap.PlayerMap.Interact.performed += OnInteract;
 
         if (_characterRb == null)
         {
             _characterRb = GetComponent<Rigidbody>();
+        }
+
+        if (_playerRenderer == null)
+        {
+            _playerRenderer = GetComponent<Renderer>();
         }
     }
 
@@ -59,12 +67,15 @@ public class PlayerNetworkMovement : NetworkBehaviour
         _inputMap.PlayerMap.RunDash.performed -= OnDash;
         _inputMap.PlayerMap.Movement.performed -= OnMove;
         _inputMap.PlayerMap.Movement.canceled -= ResetMovement;
+        _inputMap.PlayerMap.Interact.performed -= OnInteract;
         _inputMap.Disable();
     }
 
     private void Start()
     {
         _actualSpeed = moveSpeedMultiplier;
+        _dashToken = maxDashToken;
+        _playerRenderer.material.color = playerColour;
     }
 
     public override void OnNetworkSpawn()
@@ -80,7 +91,8 @@ public class PlayerNetworkMovement : NetworkBehaviour
     private void OnMove(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
-        _movementVector = new Vector3(context.ReadValue<Vector2>().x, 0, context.ReadValue<Vector2>().y);
+        _movementVector = new Vector3(context.ReadValue<Vector2>().x, 0, 0);
+        _dashVector = new Vector3(context.ReadValue<Vector2>().x, context.ReadValue<Vector2>().y, 0);
     }
 
     private void ResetMovement(InputAction.CallbackContext context)
@@ -92,22 +104,61 @@ public class PlayerNetworkMovement : NetworkBehaviour
     private void OnDash(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
+        var groundArray = Physics.OverlapSphere(groundCheckTransform.position, groundCheckRadius, groundLayer);
+        if (groundArray.Length == 0)
+        {
+            if (_dashToken == 0)
+            {
+                return;
+            }
+            _dashToken--;
+        }
+        else
+        {
+            _dashToken = maxDashToken;
+        }
         _actualSpeed = moveSpeedMultiplier * dashSpeedMultiplier;
+        _characterRb.AddForce(_dashVector*_actualSpeed, ForceMode.Impulse);
     }
     private void OnJump(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
+        Debug.Log($"Dash Token: {_dashToken}");
         var groundArray = Physics.OverlapSphere(groundCheckTransform.position, groundCheckRadius, groundLayer);
         if (groundArray.Length == 0) return;
+        _dashToken = maxDashToken;
         var jumpVector = new Vector3(0, jumpMultiplier, 0);
         _characterRb.AddForce(jumpVector, ForceMode.Impulse);
     }
     private void OnPause(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
-        Debug.Log($"{OwnerClientId}'s health is at {_playerHealth.Value}");
     }
-    
+
+    private void OnInteract(InputAction.CallbackContext context)
+    {
+        GameObject tempHolder = Instantiate(spawnedItemPrefab);
+        tempHolder.GetComponent<NetworkObject>().Spawn(true);
+    }
+
+    private void OnCollisionEnter(Collision other)
+    {
+        if (other.gameObject.GetComponent<IColourable>() == null) return;
+        var colourable = other.gameObject.GetComponent<IColourable>();
+        colourable.ChangeCubeColourClientRpc(playerColour);
+    }
+
+    [ServerRpc]
+    private void TestServerRpc()
+    {
+        Debug.Log($"Testing ServerRPC: {OwnerClientId}");
+    }
+
+    [ClientRpc]
+    private void TestClientRpc()
+    {
+        Debug.Log($"Testing ClientRPC: {OwnerClientId}");
+    }
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
