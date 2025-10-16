@@ -5,20 +5,20 @@ using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
 {
-    private static SceneLoader _instance;
-    public static SceneLoader Instance => _instance;
+    public static SceneLoader Instance {get; private set;}
+
     [SerializeField] private CanvasGroup transitionCanvasGroup;
     [SerializeField] private float transitionDuration = 0.5f;
 
     private void Awake()
     {
-        if (_instance != null && _instance != this)
+        if (Instance == null)
         {
-            Destroy(this.gameObject);
+            Instance = this;
         }
         else
         {
-            _instance = this;
+            Destroy(gameObject);
         }
     }
 
