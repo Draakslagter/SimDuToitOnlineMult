@@ -1,11 +1,7 @@
-using System;
+using Unity.Collections;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
-using UnityEngine.UIElements;
-using Random = UnityEngine.Random;
 
 public class PlayerMovementNetwork : NetworkBehaviour
 {
@@ -14,8 +10,27 @@ public class PlayerMovementNetwork : NetworkBehaviour
     [SerializeField] private GameObject spawnedItemPrefab;
         
     [Header("Player Data")]
-    private NetworkVariable<float> _playerHealth = new NetworkVariable<float>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-   
+    private NetworkVariable<PlayerCustomData> _playerData = new NetworkVariable<PlayerCustomData>(new PlayerCustomData
+    {
+        _int = 5,
+        _bool = true,
+        _color = Color.red
+    }, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+    public struct PlayerCustomData: INetworkSerializable
+    {
+        public int _int;
+        public bool _bool;
+        public Color _color;
+        public FixedString128Bytes _message;
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref _int);
+            serializer.SerializeValue(ref _bool);
+            serializer.SerializeValue(ref _color);
+            serializer.SerializeValue(ref _message);
+        }
+    }
     
     [Header("Movement")]
     private Rigidbody _characterRb;
@@ -80,7 +95,10 @@ public class PlayerMovementNetwork : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        _playerHealth.Value = Random.Range(0, 100);
+        _playerData.OnValueChanged += (PlayerCustomData previousValue, PlayerCustomData newValue) =>
+        {
+            Debug.Log($"{OwnerClientId}; player health: {newValue._int}");
+        };
     }
     private void FixedUpdate()
     {
@@ -139,6 +157,7 @@ public class PlayerMovementNetwork : NetworkBehaviour
     {
         GameObject tempHolder = Instantiate(spawnedItemPrefab);
         tempHolder.GetComponent<NetworkObject>().Spawn(true);
+
     }
 
     private void OnCollisionEnter(Collision other)

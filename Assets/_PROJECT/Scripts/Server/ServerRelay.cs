@@ -1,11 +1,8 @@
-using System;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using Unity.Networking.Transport.Relay;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
-using Unity.Services.Relay.Models;
 using UnityEngine;
 using AuthenticationException = System.Security.Authentication.AuthenticationException;
 
@@ -24,6 +21,7 @@ public class ServerRelay : MonoBehaviour
             {
                 Debug.Log($"Signed In {AuthenticationService.Instance.PlayerId}");
             };
+            
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
         }
         catch (AuthenticationException e)
@@ -32,6 +30,7 @@ public class ServerRelay : MonoBehaviour
         }
     }
 
+    
     private async void CreateRelay()
     {
         try
