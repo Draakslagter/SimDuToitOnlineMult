@@ -28,13 +28,16 @@ public class LobbyManager : MonoBehaviour
     public const string KEY_PLAYER_NAME = "PlayerName";
     public const string KEY_PLAYER_CHARACTER = "Character"; //To Remove/Change
     public const string KEY_GAME_MODE = "GameMode";
+    public const string KEY_START_GAME = "StartGame_RelayCode";
 
     public event EventHandler OnLeftLobby;
+    public event EventHandler OnGameStarted;
 
     public event EventHandler<LobbyEventArgs> OnJoinedLobby;
     public event EventHandler<LobbyEventArgs> OnJoinedLobbyUpdate;
     public event EventHandler<LobbyEventArgs> OnKickedFromLobby;
     public event EventHandler<LobbyEventArgs> OnLobbyGameModeChanged;
+    
 
     public class LobbyEventArgs : EventArgs
     {
@@ -139,13 +142,28 @@ public class LobbyManager : MonoBehaviour
         
         OnJoinedLobbyUpdate?.Invoke(this, new LobbyEventArgs { lobby = _joinedLobby });
 
-        if (IsPlayerInLobby()) return;
-        // Player was kicked out of this lobby
-        Debug.Log("Kicked from Lobby!");
+        if (!IsPlayerInLobby())
+        {
+            // Player was kicked out of this lobby
+            Debug.Log("Kicked from Lobby!");
 
-        OnKickedFromLobby?.Invoke(this, new LobbyEventArgs { lobby = _joinedLobby });
+            OnKickedFromLobby?.Invoke(this, new LobbyEventArgs { lobby = _joinedLobby });
+
+            _joinedLobby = null;
+        }
+        
+        if (_joinedLobby == null || _joinedLobby.Data[KEY_START_GAME].Value == "0") return;
+
+        if (!IsLobbyHost())
+        {
+            ServerRelay.Instance.JoinRelay(_joinedLobby.Data[KEY_START_GAME].Value);
+        }
 
         _joinedLobby = null;
+        
+        OnGameStarted?.Invoke(this, EventArgs.Empty);
+        
+
     }
     
     public Lobby GetJoinedLobby() {
@@ -198,7 +216,8 @@ public class LobbyManager : MonoBehaviour
             Player = player,
             IsPrivate = isPrivate,
             Data = new Dictionary<string, DataObject> {
-                { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) }
+                { KEY_GAME_MODE, new DataObject(DataObject.VisibilityOptions.Public, gameMode.ToString()) },
+                {KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, "0") }
             }
         };
 
@@ -385,7 +404,7 @@ public class LobbyManager : MonoBehaviour
             {
                 Data = new Dictionary<string, DataObject>
                 {
-                    // { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, relayCode) }
+                     { KEY_START_GAME, new DataObject(DataObject.VisibilityOptions.Member, relayCode) }
                 }
             });
 

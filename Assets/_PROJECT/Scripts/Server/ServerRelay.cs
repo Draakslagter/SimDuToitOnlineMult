@@ -27,26 +27,6 @@ public class ServerRelay : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
-    private async void Start()
-    {
-        try
-        {
-            await UnityServices.InitializeAsync();
-
-            AuthenticationService.Instance.SignedIn += () =>
-            {
-                Debug.Log($"Signed In {AuthenticationService.Instance.PlayerId}");
-            };
-            
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-        }
-        catch (AuthenticationException e)
-        {
-            Debug.LogError($"AuthenticationException: {e.Message}");
-        }
-    }
-
     
     public async Task<string> CreateRelay()
     {
@@ -59,6 +39,7 @@ public class ServerRelay : MonoBehaviour
             Debug.Log(joinCode);
             
             RelayServerData relayServerData = allocationHolder.ToRelayServerData("dtls");
+            
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
             NetworkManager.Singleton.StartHost();

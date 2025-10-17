@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
@@ -19,7 +20,7 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Button changeZombieButton;
     [SerializeField] private Button leaveLobbyButton;
     [SerializeField] private Button changeGameModeButton;
-
+    [SerializeField] private Button startGameButton;
 
     private void Awake() {
         Instance = this;
@@ -43,6 +44,11 @@ public class LobbyUI : MonoBehaviour
         changeGameModeButton.onClick.AddListener(() => {
             LobbyManager.Instance.ChangeGameMode();
         });
+        
+        startGameButton.onClick.AddListener(() =>
+        {
+            LobbyManager.Instance.StartGame();
+        });
     }
 
     private void Start() {
@@ -51,8 +57,16 @@ public class LobbyUI : MonoBehaviour
         LobbyManager.Instance.OnLobbyGameModeChanged += UpdateLobby_Event;
         LobbyManager.Instance.OnLeftLobby += LobbyManager_OnLeftLobby;
         LobbyManager.Instance.OnKickedFromLobby += LobbyManager_OnLeftLobby;
+        LobbyManager.Instance.OnGameStarted += LobbyManager_OnGameStarted;
 
         Hide();
+    }
+
+    private void LobbyManager_OnGameStarted(object sender, EventArgs e)
+    {
+        Hide();
+        
+        EditPlayerName.Instance.Hide();
     }
 
     private void LobbyManager_OnLeftLobby(object sender, System.EventArgs e) {
